@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HandAnalysis Web</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>HandAnalysis Web</h1>
+      <p>Interface estática para GitHub Pages conectada ao backend FastAPI.</p>
+    </header>
+
+    <section class="card">
+      <h2>Configuração da API</h2>
+      <label for="apiBaseUrl">API base URL</label>
+      <input id="apiBaseUrl" type="url" placeholder="https://seu-backend.onrender.com" />
+      <p class="hint">Exemplo: <code>https://handanalysis-api.onrender.com</code></p>
+      <button id="saveApiBtn" type="button">Salvar API URL</button>
+      <p id="apiStatus" class="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Analisar CSV de landmarks</h2>
+      <form id="csvForm">
+        <label for="csvFile">Arquivo CSV</label>
+        <input id="csvFile" name="file" type="file" accept=".csv" required />
+
+        <label class="checkbox">
+          <input id="csvNormalize" name="normalize" type="checkbox" checked />
+          Normalizar por largura da palma
+        </label>
+
+        <button type="submit">Enviar CSV</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Analisar vídeo RGB</h2>
+      <form id="videoForm">
+        <label for="videoFile">Arquivo de vídeo</label>
+        <input id="videoFile" name="file" type="file" accept=".mp4,.mov,.avi,.mkv" required />
+
+        <div class="grid2">
+          <div>
+            <label for="handSide">Lado da mão</label>
+            <select id="handSide" name="hand_side">
+              <option value="any" selected>any</option>
+              <option value="left">left</option>
+              <option value="right">right</option>
+            </select>
+          </div>
+          <div>
+            <label for="maxFrames">Máximo de frames (opcional)</label>
+            <input id="maxFrames" name="max_frames" type="number" min="1" />
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <label for="minDet">Min detection confidence</label>
+            <input id="minDet" name="min_detection_confidence" type="number" min="0" max="1" step="0.05" value="0.5" />
+          </div>
+          <div>
+            <label for="minTrack">Min tracking confidence</label>
+            <input id="minTrack" name="min_tracking_confidence" type="number" min="0" max="1" step="0.05" value="0.5" />
+          </div>
+        </div>
+
+        <label for="modelAssetPath">Model asset path (.task, opcional)</label>
+        <input id="modelAssetPath" name="model_asset_path" type="text" placeholder="/app/models/hand_landmarker.task" />
+
+        <label class="checkbox">
+          <input id="videoNormalize" name="normalize" type="checkbox" checked />
+          Normalizar por largura da palma
+        </label>
+
+        <button type="submit">Enviar vídeo</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Resultado</h2>
+      <pre id="result">Aguardando execução...</pre>
+      <div id="links"></div>
+      <div id="preview"></div>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
