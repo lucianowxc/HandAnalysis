@@ -6,3 +6,8 @@ __pycache__/
 *.pyd
 *.egg-info/
 .pytest_cache/
+web_runs/
+tests/output/
+models/*.task
+*.Zone.Identifier
+*:Zone.Identifier

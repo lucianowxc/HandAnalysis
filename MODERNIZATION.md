@@ -17,6 +17,8 @@ Criar um pipeline monocular offline (`v1`) que:
 - `src/modern/io.py`: leitura/escrita de CSV
 - `src/modern/pipeline.py`: orquestração do processamento
 - `src/modern/cli.py`: runner CLI
+- `src/modern/landmarks_extractor.py`: extração de landmarks 21-juntas de vídeo RGB
+- `src/modern/extract_landmarks_cli.py`: CLI para gerar CSV de landmarks
 - `tests/`: testes unitários e smoke test
 - `pyproject.toml`: configuração moderna de pacote e testes
 
@@ -30,8 +32,73 @@ CSV longo com colunas:
 
 ## Uso rápido
 
+### 1) Extrair landmarks de vídeo RGB
+
+```bash
+python -m modern.extract_landmarks_cli \
+	--input-video data/hand_video.mp4 \
+	--output-csv data/landmarks.csv \
+	--hand-side any \
+	--model-asset-path models/hand_landmarker.task
+```
+
+> Dependências opcionais para esta etapa: `pip install -e .[vision]`
+
+> Na API mais nova do MediaPipe (Tasks), o modelo `.task` de mão é obrigatório.
+
+### 2) Calcular medidas clínicas a partir dos landmarks
+
 ```bash
 python -m modern.cli --input-csv data/landmarks.csv --output-csv out/angles.csv
+```
+
+### 2.1) Visualizar movimento (gráfico + esqueleto sobreposto)
+
+```bash
+python -m modern.visualize_cli \
+	--input-video data/hand_video.mp4 \
+	--landmarks-csv data/landmarks.csv \
+	--angles-csv out/angles.csv
+```
+
+Saídas:
+
+- `<stem>_overlay.mp4` com esqueleto sobre o vídeo
+- `<stem>_motion.png` com séries temporais (flexão/abdução por padrão)
+
+### 3) Subir webserver para uso fácil
+
+```bash
+pip install -e .[web]
+python -m modern.webserver
+```
+
+API disponível em `http://localhost:8000`.
+
+Interface web amigável disponível em `http://localhost:8000/`.
+
+Na interface (`/`), após cada análise, você verá:
+
+- links de download dos resultados;
+- preview embutido do vídeo com esqueleto (quando disponível);
+- preview do gráfico temporal de flexão/abdução.
+
+- `GET /health` — status da API
+- `POST /analyze/csv` — upload de `landmarks.csv`, retorna links dos resultados
+- `POST /analyze/video` — upload de vídeo RGB (`.mp4`, `.mov`, `.avi`, `.mkv`), roda extração + análise
+- `POST /analyze/video` — upload de vídeo RGB (`.mp4`, `.mov`, `.avi`, `.mkv`), roda extração + análise (aceita `model_asset_path`)
+- `GET /runs/{run_id}/{kind}` — download de resultado (`landmarks|angles|summary`)
+
+Fluxo sugerido para uso clínico rápido:
+
+1. Abrir `http://localhost:8000/` no navegador.
+2. Fazer upload do CSV de landmarks ou vídeo.
+3. Baixar `angles.csv` e `angles_summary.csv` pelos links gerados.
+
+> Para usar `POST /analyze/video`, instale também os extras de visão:
+
+```bash
+pip install -e .[vision]
 ```
 
 Arquivos de saída:
@@ -49,6 +116,7 @@ Arquivos de saída:
 
 ### v2 — Validação clínica automatizada
 
+- Extração automática RGB -> CSV (implementado)
 - Comparador `monocular vs depth-baseline`
 - Métricas por articulação (MAE angular, jitter, taxa de falha)
 - Relatório por sessão/paciente

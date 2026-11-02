@@ -75,3 +75,12 @@ def write_summary_csv(path: str | Path, matrix: np.ndarray, columns: Iterable[st
                     f"{np.nanmax(series):.6f}",
                 ]
             )
+
+
+def write_landmarks_csv(path: str | Path, rows: Iterable[Dict[str, object]]) -> None:
+    fieldnames = ["frame", "joint", "x", "y", "z", "confidence", "handedness"]
+    with Path(path).open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
