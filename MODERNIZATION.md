@@ -133,6 +133,46 @@ Passos:
 
 > Importante: GitHub Pages é estático; o backend Python precisa rodar em host externo (Render/Railway/Fly/VM).
 
+### 5) Publicar backend FastAPI (produção)
+
+#### Opção A — Render (recomendada)
+
+O repositório já inclui `render.yaml` com configuração padrão.
+
+1. No Render, clique em **New + → Blueprint**.
+2. Conecte este repositório.
+3. Confirme o serviço `handanalysis-backend`.
+4. Após deploy, copie a URL pública (ex.: `https://handanalysis-backend.onrender.com`).
+5. No GitHub Pages, preencha essa URL no campo **API base URL**.
+
+Variável importante:
+
+- `HANDANALYSIS_CORS_ALLOW_ORIGINS=https://lucianowxc.github.io`
+
+Se usar domínio customizado no frontend, inclua-o na variável, separado por vírgulas.
+
+#### Opção B — Docker (qualquer VM/cloud)
+
+Arquivos prontos:
+
+- `Dockerfile`
+- `.dockerignore`
+
+Build e execução local:
+
+```bash
+docker build -t handanalysis-backend .
+docker run --rm -p 8000:8000 \
+	-e HANDANALYSIS_CORS_ALLOW_ORIGINS="https://lucianowxc.github.io" \
+	handanalysis-backend
+```
+
+Health check:
+
+```bash
+curl http://localhost:8000/health
+```
+
 Arquivos de saída:
 
 - `out/angles.csv` (série temporal por frame)

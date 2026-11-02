@@ -24,7 +24,8 @@ vision = [
 web = [
   "fastapi>=0.111",
   "uvicorn>=0.30",
-  "python-multipart>=0.0.9"
+  "python-multipart>=0.0.9",
+  "matplotlib>=3.8"
 ]
 
 [tool.setuptools]

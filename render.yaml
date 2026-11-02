@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: handanalysis-backend
+    env: python
+    plan: starter
+    autoDeploy: true
+    buildCommand: pip install --upgrade pip && pip install -e .[web,vision] matplotlib
+    startCommand: uvicorn modern.webserver:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: HANDANALYSIS_CORS_ALLOW_ORIGINS
+        value: https://lucianowxc.github.io

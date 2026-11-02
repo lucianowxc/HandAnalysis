@@ -409,7 +409,9 @@ def main() -> None:
         raise RuntimeError("uvicorn is required to run web server. Install with: pip install uvicorn") from exc
 
     DEFAULT_RUNS_DIR.mkdir(parents=True, exist_ok=True)
-    uvicorn.run("modern.webserver:app", host="0.0.0.0", port=8000, reload=False)
+    host = os.getenv("HANDANALYSIS_HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", os.getenv("HANDANALYSIS_PORT", "8000")))
+    uvicorn.run("modern.webserver:app", host=host, port=port, reload=False)
 
 
 if __name__ == "__main__":

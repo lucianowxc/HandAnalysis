@@ -1,0 +1,14 @@
+.git
+.gitignore
+.venv
+.pytest_cache
+.vscode
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+tests/
+docs/
+web_runs/
+models/
