@@ -9,3 +9,5 @@ services:
     envVars:
       - key: HANDANALYSIS_CORS_ALLOW_ORIGINS
         value: https://lucianowxc.github.io
+      - key: HANDANALYSIS_MEDIAPIPE_MODEL_PATH
+        value: /opt/render/project/src/models/hand_landmarker.task

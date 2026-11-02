@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib
+import os
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Literal, Sequence
@@ -36,6 +38,54 @@ JOINT_TO_MEDIAPIPE_INDEX: Dict[str, int] = {
     "V-DIP": 19,
     "V-TIP": 20,
 }
+
+DEFAULT_TASK_MODEL_URL = (
+    "https://storage.googleapis.com/mediapipe-models/hand_landmarker/"
+    "hand_landmarker/float16/1/hand_landmarker.task"
+)
+
+
+def _resolve_tasks_model_path(model_asset_path: str | None) -> Path:
+    """Resolve hand landmarker .task path for MediaPipe Tasks backend.
+
+    Resolution order:
+    1) explicit `model_asset_path` argument
+    2) env `HANDANALYSIS_MEDIAPIPE_MODEL_PATH`
+    3) default `<repo>/models/hand_landmarker.task` (download if missing)
+    """
+
+    if model_asset_path:
+        path = Path(model_asset_path)
+    else:
+        env_path = os.getenv("HANDANALYSIS_MEDIAPIPE_MODEL_PATH", "").strip()
+        if env_path:
+            path = Path(env_path)
+        else:
+            base_dir = Path(__file__).resolve().parents[2]
+            path = base_dir / "models" / "hand_landmarker.task"
+
+    if path.exists():
+        return path
+
+    auto_download = os.getenv("HANDANALYSIS_AUTO_DOWNLOAD_MODEL", "true").strip().lower()
+    if auto_download not in {"1", "true", "yes", "on"}:
+        raise RuntimeError(
+            "MediaPipe Tasks backend requires a hand landmarker model (.task). "
+            f"Model not found at: {path}. Provide --model-asset-path or set "
+            "HANDANALYSIS_MEDIAPIPE_MODEL_PATH."
+        )
+
+    model_url = os.getenv("HANDANALYSIS_MEDIAPIPE_MODEL_URL", DEFAULT_TASK_MODEL_URL).strip()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        urllib.request.urlretrieve(model_url, str(path))
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(
+            "Failed to auto-download MediaPipe hand landmarker model. "
+            f"URL: {model_url} | target: {path} | error: {exc}"
+        ) from exc
+
+    return path
 
 
 @dataclass(frozen=True)
@@ -75,14 +125,7 @@ class MediaPipeHandDetector:
                 min_tracking_confidence=min_tracking_confidence,
             )
         else:
-            if not model_asset_path:
-                raise RuntimeError(
-                    "MediaPipe Tasks backend requires a hand landmarker model (.task). "
-                    "Provide --model-asset-path (CLI) or model_asset_path (API)."
-                )
-            model_path = Path(model_asset_path)
-            if not model_path.exists():
-                raise RuntimeError(f"Hand landmarker model not found: {model_path}")
+            model_path = _resolve_tasks_model_path(model_asset_path)
 
             tasks = importlib.import_module("mediapipe.tasks.python")
             vision = importlib.import_module("mediapipe.tasks.python.vision")

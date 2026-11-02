@@ -46,6 +46,12 @@ python -m modern.extract_landmarks_cli \
 
 > Na API mais nova do MediaPipe (Tasks), o modelo `.task` de mão é obrigatório.
 
+No backend, se `model_asset_path` não for enviado, o sistema tenta resolver automaticamente nesta ordem:
+
+1. `HANDANALYSIS_MEDIAPIPE_MODEL_PATH` (env)
+2. `models/hand_landmarker.task` no projeto
+3. download automático do modelo oficial (se `HANDANALYSIS_AUTO_DOWNLOAD_MODEL=true`)
+
 ### 1.1) Extrair landmarks direto da webcam
 
 ```bash
@@ -148,6 +154,7 @@ O repositório já inclui `render.yaml` com configuração padrão.
 Variável importante:
 
 - `HANDANALYSIS_CORS_ALLOW_ORIGINS=https://lucianowxc.github.io`
+- `HANDANALYSIS_MEDIAPIPE_MODEL_PATH=/opt/render/project/src/models/hand_landmarker.task`
 
 Se usar domínio customizado no frontend, inclua-o na variável, separado por vírgulas.
 
