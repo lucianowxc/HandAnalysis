@@ -6,6 +6,7 @@ from modern.hand_kinematics import JOINT_NAMES
 from modern.landmarks_extractor import (
     JOINT_TO_MEDIAPIPE_INDEX,
     _as_pixel_relative_depth,
+    _normalize_camera_index,
     _normalize_handside,
     _select_hand,
 )
@@ -43,6 +44,17 @@ def test_relative_depth_conversion_uses_frame_size():
     coords_norm = np.array([[0.5, 0.25, -0.1]])
     out = _as_pixel_relative_depth(coords_norm, width=640, height=480)
     assert np.allclose(out[0], np.array([320.0, 120.0, -64.0]))
+
+
+def test_normalize_camera_index_validation():
+    assert _normalize_camera_index(0) == 0
+    assert _normalize_camera_index("2") == 2
+    try:
+        _normalize_camera_index(-1)
+    except ValueError as exc:
+        assert ">= 0" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for negative camera index")
 
 
 def test_write_landmarks_csv_generates_expected_columns(tmp_path):

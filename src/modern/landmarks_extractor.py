@@ -186,6 +186,77 @@ def _as_pixel_relative_depth(coords_norm: np.ndarray, width: int, height: int) -
     return out
 
 
+def _normalize_camera_index(camera_index: int | str) -> int:
+    idx = int(camera_index)
+    if idx < 0:
+        raise ValueError("camera_index must be >= 0")
+    return idx
+
+
+def _extract_from_capture(
+    cap: object,
+    detector: MediaPipeHandDetector,
+    normalized_side: HandSide,
+    output_csv: str,
+    max_frames: int | None,
+) -> ExtractionStats:
+    cv2 = importlib.import_module("cv2")
+
+    if not cap.isOpened():
+        raise ValueError("Cannot open capture source")
+
+    output_rows: List[Dict[str, object]] = []
+    total_frames = 0
+    detected_frames = 0
+
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+
+        total_frames += 1
+        if max_frames is not None and total_frames > max_frames:
+            break
+
+        h, w = frame.shape[:2]
+        pos_msec = cap.get(cv2.CAP_PROP_POS_MSEC)
+        timestamp_ms = int(pos_msec) if pos_msec and pos_msec > 0 else int((total_frames - 1) * 33)
+        hands = detector.detect(frame, timestamp_ms=timestamp_ms)
+        selected = _select_hand(hands, normalized_side)
+        if selected is None:
+            continue
+
+        detected_frames += 1
+        coords_norm = selected["coords"]
+        assert isinstance(coords_norm, np.ndarray)
+        coords = _as_pixel_relative_depth(coords_norm, width=w, height=h)
+        confidence = float(selected["score"])
+        handedness = str(selected["label"]).lower()
+
+        for j, joint_name in enumerate(JOINT_NAMES):
+            output_rows.append(
+                {
+                    "frame": total_frames - 1,
+                    "joint": joint_name,
+                    "x": float(coords[j, 0]),
+                    "y": float(coords[j, 1]),
+                    "z": float(coords[j, 2]),
+                    "confidence": confidence,
+                    "handedness": handedness,
+                }
+            )
+
+    out_path = Path(output_csv)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    write_landmarks_csv(out_path, output_rows)
+
+    return ExtractionStats(
+        total_frames=total_frames,
+        detected_frames=detected_frames,
+        output_csv=out_path,
+    )
+
+
 def extract_landmarks_from_video(
     input_video: str,
     output_csv: str,
@@ -205,61 +276,48 @@ def extract_landmarks_from_video(
     )
 
     cap = cv2.VideoCapture(str(input_video))
-    if not cap.isOpened():
-        detector.close()
-        raise ValueError(f"Cannot open input video: {input_video}")
-
-    output_rows: List[Dict[str, object]] = []
-    total_frames = 0
-    detected_frames = 0
 
     try:
-        while True:
-            ok, frame = cap.read()
-            if not ok:
-                break
-
-            total_frames += 1
-            if max_frames is not None and total_frames > max_frames:
-                break
-
-            h, w = frame.shape[:2]
-            pos_msec = cap.get(cv2.CAP_PROP_POS_MSEC)
-            timestamp_ms = int(pos_msec) if pos_msec and pos_msec > 0 else int((total_frames - 1) * 33)
-            hands = detector.detect(frame, timestamp_ms=timestamp_ms)
-            selected = _select_hand(hands, normalized_side)
-            if selected is None:
-                continue
-
-            detected_frames += 1
-            coords_norm = selected["coords"]
-            assert isinstance(coords_norm, np.ndarray)
-            coords = _as_pixel_relative_depth(coords_norm, width=w, height=h)
-            confidence = float(selected["score"])
-            handedness = str(selected["label"]).lower()
-
-            for j, joint_name in enumerate(JOINT_NAMES):
-                output_rows.append(
-                    {
-                        "frame": total_frames - 1,
-                        "joint": joint_name,
-                        "x": float(coords[j, 0]),
-                        "y": float(coords[j, 1]),
-                        "z": float(coords[j, 2]),
-                        "confidence": confidence,
-                        "handedness": handedness,
-                    }
-                )
+        return _extract_from_capture(
+            cap=cap,
+            detector=detector,
+            normalized_side=normalized_side,
+            output_csv=output_csv,
+            max_frames=max_frames,
+        )
     finally:
         cap.release()
         detector.close()
 
-    out_path = Path(output_csv)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    write_landmarks_csv(out_path, output_rows)
 
-    return ExtractionStats(
-        total_frames=total_frames,
-        detected_frames=detected_frames,
-        output_csv=out_path,
+def extract_landmarks_from_camera(
+    output_csv: str,
+    camera_index: int | str = 0,
+    hand_side: str = "any",
+    min_detection_confidence: float = 0.5,
+    min_tracking_confidence: float = 0.5,
+    max_frames: int | None = None,
+    model_asset_path: str | None = None,
+) -> ExtractionStats:
+    cv2 = importlib.import_module("cv2")
+
+    normalized_side = _normalize_handside(hand_side)
+    index = _normalize_camera_index(camera_index)
+    detector = MediaPipeHandDetector(
+        min_detection_confidence=min_detection_confidence,
+        min_tracking_confidence=min_tracking_confidence,
+        model_asset_path=model_asset_path,
     )
+    cap = cv2.VideoCapture(index)
+
+    try:
+        return _extract_from_capture(
+            cap=cap,
+            detector=detector,
+            normalized_side=normalized_side,
+            output_csv=output_csv,
+            max_frames=max_frames,
+        )
+    finally:
+        cap.release()
+        detector.close()

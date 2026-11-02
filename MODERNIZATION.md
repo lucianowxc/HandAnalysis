@@ -46,6 +46,18 @@ python -m modern.extract_landmarks_cli \
 
 > Na API mais nova do MediaPipe (Tasks), o modelo `.task` de mão é obrigatório.
 
+### 1.1) Extrair landmarks direto da webcam
+
+```bash
+python -m modern.extract_landmarks_cli \
+	--camera-index 0 \
+	--output-csv data/landmarks_camera.csv \
+	--max-frames 600 \
+	--model-asset-path models/hand_landmarker.task
+```
+
+> Use `--camera-index 1` (ou outro valor) se a câmera padrão não for a desejada.
+
 ### 2) Calcular medidas clínicas a partir dos landmarks
 
 ```bash
@@ -70,6 +82,13 @@ Saídas:
 
 ```bash
 pip install -e .[web]
+python -m modern.webserver
+```
+
+Para uso com frontend em domínio diferente (ex.: GitHub Pages), configure CORS:
+
+```bash
+export HANDANALYSIS_CORS_ALLOW_ORIGINS="https://<usuario>.github.io"
 python -m modern.webserver
 ```
 
@@ -100,6 +119,19 @@ Fluxo sugerido para uso clínico rápido:
 ```bash
 pip install -e .[vision]
 ```
+
+### 4) Publicar frontend no GitHub Pages
+
+O frontend estático está em `docs/` e é publicado pelo workflow `.github/workflows/pages.yml`.
+
+Passos:
+
+1. No repositório do GitHub, abra **Settings → Pages**.
+2. Em **Build and deployment**, selecione **GitHub Actions**.
+3. Faça push de mudanças em `docs/` ou rode manualmente o workflow.
+4. Acesse a URL publicada e configure o campo **API base URL** com a URL do backend FastAPI.
+
+> Importante: GitHub Pages é estático; o backend Python precisa rodar em host externo (Render/Railway/Fly/VM).
 
 Arquivos de saída:
 

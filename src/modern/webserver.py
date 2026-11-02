@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import os
 import shutil
 import uuid
 from pathlib import Path
@@ -17,6 +18,7 @@ DEFAULT_RUNS_DIR = BASE_DIR / "web_runs"
 
 _fastapi = importlib.import_module("fastapi")
 _fastapi_responses = importlib.import_module("fastapi.responses")
+_fastapi_cors = importlib.import_module("fastapi.middleware.cors")
 
 FastAPI = _fastapi.FastAPI
 File = _fastapi.File
@@ -25,12 +27,32 @@ HTTPException = _fastapi.HTTPException
 UploadFile = _fastapi.UploadFile
 FileResponse = _fastapi_responses.FileResponse
 HTMLResponse = _fastapi_responses.HTMLResponse
+CORSMiddleware = _fastapi_cors.CORSMiddleware
 
 app = FastAPI(
     title="HandAnalysis Modern API",
     version="0.1.0",
     description="Web API para pipeline monocular de análise de mão.",
 )
+
+_origins_env = os.getenv("HANDANALYSIS_CORS_ALLOW_ORIGINS", "*")
+_origins = [x.strip() for x in _origins_env.split(",") if x.strip()]
+if _origins == ["*"]:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 INDEX_HTML = """<!doctype html>
 <html lang=\"en\">

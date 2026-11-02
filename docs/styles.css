@@ -1,0 +1,17 @@
+body { background: #0b1220; color: #e5e7eb; font-family: Inter, Arial, sans-serif; margin: 0; }
+.container { max-width: 960px; margin: 0 auto; padding: 24px; }
+.card { background: #111827; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+h1, h2 { margin: 0 0 10px 0; }
+label { display: block; margin-top: 10px; }
+input, select, button { width: 100%; box-sizing: border-box; margin-top: 6px; padding: 9px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #e5e7eb; }
+button { cursor: pointer; background: #2563eb; border: none; font-weight: 600; }
+button:hover { background: #1d4ed8; }
+.checkbox { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.checkbox input { width: auto; margin: 0; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+pre { background: #020617; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; white-space: pre-wrap; }
+#links a { display: block; color: #60a5fa; margin-top: 8px; }
+#preview video, #preview img { width: 100%; margin-top: 12px; border-radius: 8px; border: 1px solid #1e293b; }
+.hint { color: #94a3b8; font-size: 0.9rem; }
+.status { color: #93c5fd; }
