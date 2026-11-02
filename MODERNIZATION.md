@@ -158,6 +158,9 @@ Variável importante:
 
 Se usar domínio customizado no frontend, inclua-o na variável, separado por vírgulas.
 
+Se aparecer erro como `libGLESv2.so.2: cannot open shared object file`,
+faça redeploy com o `render.yaml` atualizado (ele instala as libs do sistema no build).
+
 #### Opção B — Docker (qualquer VM/cloud)
 
 Arquivos prontos:
